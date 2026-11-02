@@ -191,10 +191,13 @@ describe('Ingestion health manager: connector runtime checks', () => {
   const CONNECTOR_ID = '5d1a5c3e-8b0f-4f43-9a52-6f3f0c1e2a11';
   const CONNECTOR_NAME = 'Ingestion health runtime checks connector';
   const ONE_HOUR_MS = 60 * 60 * 1000;
-  const ACCESS_DENIED_ERROR = '401 Client Error: Unauthorized for url: https://api.example.com/x';
+  const ACCESS_DENIED_ERROR = '401 Client Error: Unauthorized for url: <redacted-url>';
   let connectorUserId: string;
   let publishUserActionSpy: MockInstance;
   let resolveSettingsSpy: MockInstance;
+  // Recorded here, not read from publishUserActionSpy.mock.calls: vitest clears the calls of the mocks before each test (clearMocks),
+  // and the scenario expects the events of the previous tests
+  const publishedActions: Parameters<typeof userActionListener.publishUserAction>[0][] = [];
 
   // pycti also sends the end of the last run, once a run is over
   const pingAsRunningConnector = (connectorInfo: Partial<ConnectorInfo> = {}) => pingConnector(testContext, ADMIN_USER, CONNECTOR_ID, null, {
@@ -218,8 +221,7 @@ describe('Ingestion health manager: connector runtime checks', () => {
     return connector.ingestion_health;
   };
 
-  const connectorHealthEvents = () => publishUserActionSpy.mock.calls
-    .map(([action]) => action)
+  const connectorHealthEvents = () => publishedActions
     .filter((action) => action.event_type === 'ingestion_health' && action.context_data?.id === CONNECTOR_ID);
 
   // The works are created one after the other: the manager reads the last one by its timestamp
@@ -248,7 +250,10 @@ describe('Ingestion health manager: connector runtime checks', () => {
   };
 
   beforeAll(async () => {
-    publishUserActionSpy = vi.spyOn(userActionListener, 'publishUserAction').mockResolvedValue([]);
+    publishUserActionSpy = vi.spyOn(userActionListener, 'publishUserAction').mockImplementation(async (action) => {
+      publishedActions.push(action);
+      return [];
+    });
     resolveSettingsSpy = vi.spyOn(ingestionHealthSettings, 'resolveIngestionHealthSettings').mockReturnValue({ notification_delay: 0, disabled_health_checks: [] });
     const connectorGroupId = await getGroupIdByName(CONNECTOR_GROUP.name);
     // A service account: the user checks report nothing, only the runtime checks are looked at

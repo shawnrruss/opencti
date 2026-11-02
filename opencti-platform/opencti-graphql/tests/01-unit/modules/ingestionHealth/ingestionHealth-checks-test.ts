@@ -551,7 +551,7 @@ describe('last run failed check', () => {
   it('should redact an absolute url with parentheses in its path', () => {
     expect(evaluate(IMPORT_CONNECTOR, lastWork([{ message: 'GET https://api.example.com/items(1)?apikey=SECRET failed', source: null }])))
       .toEqual(failed('GET <redacted-url> failed'));
-    expect(evaluate(IMPORT_CONNECTOR, lastWork([{ message: "GET https://api.example.com/users(a)/items[2]?apikey=SECRET failed", source: null }])))
+    expect(evaluate(IMPORT_CONNECTOR, lastWork([{ message: 'GET https://api.example.com/users(a)/items[2]?apikey=SECRET failed', source: null }])))
       .toEqual(failed('GET <redacted-url> failed'));
   });
 

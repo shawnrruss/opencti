@@ -43,6 +43,7 @@ vi.mock('../../../src/config/conf', () => ({
   TEST_MODE: false,
   ENABLED_UI: false,
   CUSTOM_FIELDS_FEATURE_FLAG: 'CUSTOM_FIELDS',
+  INGESTION_HEALTH_FEATURE_FLAG: 'INGESTION_HEALTH',
   OPENCTI_SESSION: 'opencti_session',
   AUTH_PAYLOAD_BODY_SIZE: undefined,
   getBaseUrl: vi.fn(() => 'http://localhost:4000'),
